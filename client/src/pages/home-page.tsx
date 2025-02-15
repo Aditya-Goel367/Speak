@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,14 +10,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
-import { LogOut, Plus, Video } from "lucide-react";
+import { LogOut, Plus, Video, User } from "lucide-react";
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
   
   const { data: rooms = [] } = useQuery<Room[]>({ 
-    queryKey: ["/api/rooms"]
+    queryKey: ["/api/rooms"],
+    enabled: !!user
   });
   
   const createRoomForm = useForm({
@@ -38,6 +40,19 @@ export default function HomePage() {
     }
   });
 
+  if (!user) {
+    return (
+      <div className="min-h-screen p-8 flex flex-col items-center justify-center">
+        <div className="text-center mb-8">
+          <Video className="h-16 w-16 text-primary mx-auto mb-4" />
+          <h1 className="text-4xl font-bold mb-2">Welcome to Video Chat Platform</h1>
+          <p className="text-muted-foreground">Connect with people worldwide through secure video calls</p>
+        </div>
+        <Button size="lg" onClick={() => setLocation("/auth")}>Get Started</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-8">
       <header className="max-w-6xl mx-auto flex justify-between items-center mb-8">
@@ -46,8 +61,14 @@ export default function HomePage() {
           <h1 className="text-2xl font-bold">Video Chat Platform</h1>
         </div>
         
-        <div className="flex items-center gap-4">
-          <span className="text-muted-foreground">Welcome, {user?.username}</span>
+        <div className="flex items-center gap-6">
+          <Card className="flex items-center gap-4 p-4">
+            <User className="h-8 w-8 text-primary" />
+            <div>
+              <p className="font-medium">{user.username}</p>
+              <p className="text-sm text-muted-foreground">Points: {user.points || 0}</p>
+            </div>
+          </Card>
           <Button variant="outline" onClick={() => logoutMutation.mutate()}>
             <LogOut className="h-4 w-4 mr-2" />
             Logout
@@ -94,7 +115,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Created by {room.ownerId === user?.id ? "you" : "another user"}
+                    Created by {room.ownerId === user.id ? "you" : "another user"}
                   </p>
                 </CardContent>
               </Card>
