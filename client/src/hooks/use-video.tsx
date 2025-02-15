@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 
-export function useVideo() {
+export const useVideo = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
