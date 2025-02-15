@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -11,16 +10,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { LogOut, Plus, Video, User } from "lucide-react";
+import { motion } from 'framer-motion'; // Import framer-motion
+
+
+const AnimatedCard = motion(Card); // Wrap Card with motion
+const AnimatedButton = motion(Button); // Wrap Button with motion (Not used in this specific modification)
+
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
-  
+
   const { data: rooms = [] } = useQuery<Room[]>({ 
     queryKey: ["/api/rooms"],
     enabled: !!user
   });
-  
+
   const createRoomForm = useForm({
     resolver: zodResolver(insertRoomSchema),
     defaultValues: {
@@ -28,7 +33,7 @@ export default function HomePage() {
       isPrivate: false
     }
   });
-  
+
   const createRoomMutation = useMutation({
     mutationFn: async (data: { name: string; isPrivate: boolean }) => {
       const res = await apiRequest("POST", "/api/rooms", data);
@@ -68,7 +73,7 @@ export default function HomePage() {
           <Video className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-bold">Video Chat Platform</h1>
         </div>
-        
+
         <div className="flex items-center gap-6">
           <Card className="flex items-center gap-4 p-4">
             <User className="h-8 w-8 text-primary" />
@@ -83,7 +88,7 @@ export default function HomePage() {
           </Button>
         </div>
       </header>
-      
+
       <main className="max-w-6xl mx-auto grid gap-8 md:grid-cols-[1fr_2fr]">
         <Card>
           <CardHeader>
@@ -112,12 +117,20 @@ export default function HomePage() {
             </Form>
           </CardContent>
         </Card>
-        
+
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Available Rooms</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {rooms.map(room => (
-              <Card key={room.id} className="hover:bg-accent/50 cursor-pointer transition-colors" onClick={() => setLocation(`/room/${room.id}`)}>
+            {rooms.map((room, index) => ( // Added index for animation delay
+              <AnimatedCard // Use AnimatedCard
+                key={room.id}
+                className="cursor-pointer scale-up"
+                onClick={() => setLocation(`/room/${room.id}`)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }} //Staggered animation
+                whileHover={{ scale: 1.02 }}
+              >
                 <CardHeader>
                   <CardTitle className="text-lg">{room.name}</CardTitle>
                 </CardHeader>
@@ -126,10 +139,10 @@ export default function HomePage() {
                     Created by {room.ownerId === user.id ? "you" : "another user"}
                   </p>
                 </CardContent>
-              </Card>
+              </AnimatedCard>
             ))}
           </div>
-          
+
           {rooms.length === 0 && (
             <p className="text-center text-muted-foreground py-8">
               No rooms available. Create one to get started!
