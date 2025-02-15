@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useVideo } from "@/hooks/use-video";
+import useVideo from "@/hooks/use-video";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export default function RoomPage() {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const { stream, isVideoEnabled, isAudioEnabled, toggleVideo, toggleAudio } = useVideo();
   const { peers, messages, users, sendMessage } = useWebSocket(roomId);
-  
+
   const { data: room } = useQuery<Room>({
     queryKey: [`/api/rooms/${roomId}`],
     enabled: !isNaN(roomId),
