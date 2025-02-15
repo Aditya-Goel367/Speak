@@ -16,6 +16,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField } from "@/components/ui/form";
+import useSpeechRecognition from "@/hooks/use-speech-recognition"; // Assuming this hook is created
+
 
 const messageSchema = z.object({
   message: z.string().min(1),
@@ -31,6 +33,15 @@ export default function RoomPage() {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const { stream, isVideoEnabled, isAudioEnabled, toggleVideo, toggleAudio } = useVideo();
   const { peers, messages, users, sendMessage } = useWebSocket(roomId);
+  const { isListening, englishScore, startListening, stopListening } = useSpeechRecognition();
+
+  useEffect(() => {
+    if (isAudioEnabled) {
+      startListening();
+    } else {
+      stopListening();
+    }
+  }, [isAudioEnabled]);
 
   const { data: room } = useQuery<Room>({
     queryKey: [`/api/rooms/${roomId}`],
@@ -52,7 +63,7 @@ export default function RoomPage() {
   }, [stream]);
 
   const trialCalls = parseInt(localStorage.getItem('trialCalls') || '0');
-  
+
   if (!room) return null;
   if (!user && trialCalls >= 3) {
     return (
@@ -73,7 +84,7 @@ export default function RoomPage() {
       </div>
     );
   }
-  
+
   React.useEffect(() => {
     if (!user) {
       const current = parseInt(localStorage.getItem('trialCalls') || '0');
@@ -106,12 +117,14 @@ export default function RoomPage() {
                 className="w-full h-full object-cover"
                 srcObject={peer.stream}
               />
-              <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm">
-                {users.find((u) => u.id === peerId)?.username}
+              <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm flex flex-col gap-1">
+                <div>{users.find((u) => u.id === peerId)?.username}</div>
+                <div className="text-xs">English Score: {englishScore}</div>
+                {isListening && <div className="text-xs text-green-500">Speaking English</div>}
               </div>
             </div>
           ))}
-          
+
           <div 
             className="absolute bottom-4 right-4 w-32 h-24 cursor-pointer hover:scale-150 transition-transform"
             onClick={(e) => {
@@ -167,8 +180,10 @@ export default function RoomPage() {
                 className="w-full h-full object-cover"
                 srcObject={peer.stream}
               />
-              <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm">
-                {users.find((u) => u.id === peerId)?.username}
+              <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm flex flex-col gap-1">
+                <div>{users.find((u) => u.id === peerId)?.username}</div>
+                <div className="text-xs">English Score: {englishScore}</div>
+                {isListening && <div className="text-xs text-green-500">Speaking English</div>}
               </div>
             </Card>
           ))}
