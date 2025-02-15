@@ -75,8 +75,16 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", passport.authenticate("local"), async (req, res) => {
+    // Note: You'll need to set up an email service like SendGrid or NodeMailer
+    try {
+      await storage.sendLoginNotification(req.user.username);
+      res.status(200).json(req.user);
+    } catch (error) {
+      // Still login successfully even if email fails
+      console.error('Failed to send login notification:', error);
+      res.status(200).json(req.user);
+    }
   });
 
   app.post("/api/logout", (req, res, next) => {
