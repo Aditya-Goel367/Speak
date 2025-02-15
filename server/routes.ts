@@ -116,6 +116,11 @@ function handleWebSocketConnection(wsManager: WebSocketManager) {
   return async (ws: WebSocket, req: any) => {
     if (!req.url) return ws.close();
     
+    const isAnonymous = req.url.includes('anonymous=true');
+    const userId = isAnonymous ? 
+      `anonymous_${Date.now()}` : 
+      parseInt(new URL(req.url, "http://localhost").searchParams.get("userId") || "");
+    
     const userId = parseInt(new URL(req.url, "http://localhost").searchParams.get("userId") || "");
     if (isNaN(userId)) return ws.close();
     
@@ -169,4 +174,28 @@ async function handleJoinRoom(wsManager: WebSocketManager, roomId: number, userI
     roomId,
     users: users.filter((u): u is User => !!u)
   });
+}
+
+
+async function findMatchingUser(userId: number): Promise<User | null> {
+  const currentUser = await storage.getUser(userId);
+  if (!currentUser) return null;
+
+  const users = await storage.getActiveUsers();
+  return users.find(u => 
+    u.id !== userId && 
+    Math.abs((u.points || 0) - (currentUser.points || 0)) < 100
+  ) || null;
+}
+
+
+async function getBotResponse(message: string): Promise<string> {
+  // Simple bot responses - you can enhance this with more sophisticated AI
+  const responses = [
+    "That's interesting! Tell me more.",
+    "I understand what you mean.",
+    "How does that make you feel?",
+    "Let's explore that topic further.",
+  ];
+  return responses[Math.floor(Math.random() * responses.length)];
 }
