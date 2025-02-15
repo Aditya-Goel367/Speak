@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 
-export const useVideo = () => {
+const useVideo = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
@@ -53,4 +53,6 @@ export const useVideo = () => {
     toggleVideo,
     toggleAudio
   };
-}
+};
+
+export { useVideo };
