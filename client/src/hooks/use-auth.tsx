@@ -22,6 +22,18 @@ type LoginData = Pick<InsertUser, "username" | "password">;
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [trialCalls, setTrialCalls] = React.useState(() => {
+    const stored = localStorage.getItem('trialCalls');
+    return stored ? parseInt(stored) : 0;
+  });
+
+  const incrementTrialCalls = React.useCallback(() => {
+    setTrialCalls(prev => {
+      const next = prev + 1;
+      localStorage.setItem('trialCalls', next.toString());
+      return next;
+    });
+  }, []);
   const {
     data: user,
     error,

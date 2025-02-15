@@ -51,7 +51,35 @@ export default function RoomPage() {
     }
   }, [stream]);
 
-  if (!room || !user) return null;
+  const trialCalls = parseInt(localStorage.getItem('trialCalls') || '0');
+  
+  if (!room) return null;
+  if (!user && trialCalls >= 3) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-[400px]">
+          <CardHeader>
+            <CardTitle>Trial Expired</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              You have used all your trial calls. Please log in to continue using the video chat.
+            </p>
+            <Button onClick={() => setLocation("/auth")} className="w-full">
+              Log In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  React.useEffect(() => {
+    if (!user) {
+      const current = parseInt(localStorage.getItem('trialCalls') || '0');
+      localStorage.setItem('trialCalls', (current + 1).toString());
+    }
+  }, []);
 
   const handleSendMessage = (data: MessageForm) => {
     sendMessage(data.message);
@@ -69,15 +97,39 @@ export default function RoomPage() {
           <h1 className="text-2xl font-bold">{room.name}</h1>
         </header>
 
-        <div className="grid gap-4 flex-1 grid-cols-2 auto-rows-fr">
-          <Card className="relative overflow-hidden">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-            />
+        <div className="relative flex-1">
+          {Array.from(peers.entries()).map(([peerId, peer]) => (
+            <div key={peerId} className="h-full">
+              <video
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+                srcObject={peer.stream}
+              />
+              <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm">
+                {users.find((u) => u.id === peerId)?.username}
+              </div>
+            </div>
+          ))}
+          
+          <div 
+            className="absolute bottom-4 right-4 w-32 h-24 cursor-pointer hover:scale-150 transition-transform"
+            onClick={(e) => {
+              e.currentTarget.classList.toggle('fixed');
+              e.currentTarget.classList.toggle('inset-0');
+              e.currentTarget.classList.toggle('w-32');
+              e.currentTarget.classList.toggle('h-24');
+              e.currentTarget.classList.toggle('z-50');
+            }}
+          >
+            <Card className="w-full h-full relative overflow-hidden">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
             <div className="absolute bottom-4 left-4 right-4 flex justify-center gap-2">
               <Button
                 variant={isAudioEnabled ? "default" : "destructive"}
