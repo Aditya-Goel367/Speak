@@ -1,7 +1,15 @@
 
 import { useState, useEffect } from "react";
 
-const useVideo = () => {
+interface VideoHook {
+  stream: MediaStream | null;
+  isVideoEnabled: boolean;
+  isAudioEnabled: boolean;
+  toggleVideo: () => void;
+  toggleAudio: () => void;
+}
+
+export function useVideo(): VideoHook {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
@@ -53,6 +61,4 @@ const useVideo = () => {
     toggleVideo,
     toggleAudio
   };
-};
-
-export { useVideo };
+}
