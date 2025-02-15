@@ -9,7 +9,7 @@ interface VideoHook {
   toggleAudio: () => void;
 }
 
-const useVideo = (): VideoHook => {
+export function useVideo(): VideoHook {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
