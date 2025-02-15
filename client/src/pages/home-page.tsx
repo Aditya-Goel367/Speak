@@ -71,7 +71,7 @@ export default function HomePage() {
       <header className="max-w-6xl mx-auto flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
           <Video className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-bold">Video Chat Platform</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Speaklex</h1>
         </div>
 
         <div className="flex items-center gap-6">

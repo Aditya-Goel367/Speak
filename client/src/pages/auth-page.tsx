@@ -127,7 +127,7 @@ export default function AuthPage() {
       <div className="hidden md:flex flex-col items-center justify-center p-8 bg-gradient-to-br from-primary/10 to-primary/30">
         <Video className="h-24 w-24 mb-8 text-primary" />
         <h1 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-          Video Chat Platform
+          Speaklex
         </h1>
         <p className="text-lg text-center text-muted-foreground max-w-md">
           Connect with others through high-quality video calls, text chat, and more.
