@@ -46,9 +46,17 @@ export default function HomePage() {
         <div className="text-center mb-8">
           <Video className="h-16 w-16 text-primary mx-auto mb-4" />
           <h1 className="text-4xl font-bold mb-2">Welcome to Video Chat Platform</h1>
-          <p className="text-muted-foreground">Connect with people worldwide through secure video calls</p>
+          <p className="text-muted-foreground mb-8">Connect with people worldwide through secure video calls</p>
+          <div className="flex gap-4 justify-center">
+            <Button size="lg" onClick={() => setLocation("/auth")}>Sign Up</Button>
+            <Button size="lg" variant="outline" onClick={() => setLocation("/room/1")}>
+              Try it First (3 free calls)
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Try the platform with up to 3 free video calls before signing up
+          </p>
         </div>
-        <Button size="lg" onClick={() => setLocation("/auth")}>Get Started</Button>
       </div>
     );
   }
