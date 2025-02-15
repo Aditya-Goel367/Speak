@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
-import { storage } from "./storage";
+import { storage } from "../Database/storage";
 import { insertRoomSchema, type WebSocketMessage, type User } from "@shared/schema";
 import { z } from "zod";
 
