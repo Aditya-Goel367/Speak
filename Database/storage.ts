@@ -1,13 +1,5 @@
-//Example assuming the original code contained files named  'db.js' and a file that imported it like 'main.js'
 
-//db.js (inside a Database folder)
-const db = { /* ... database connection details */ };
-const pool = { /* ... database pool details */ };
+import { pool, db } from "../server/db";
+import { storage } from "../server/storage";
 
-export { db, pool };
-
-
-//main.js
-import { db, pool } from "./Database/db";
-
-//Rest of main.js file...
+export { storage, db, pool };
