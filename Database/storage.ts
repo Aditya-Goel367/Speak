@@ -1,10 +1,26 @@
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "../server/db"; // Ensure this correctly imports your DB pool
 
-import { pool, db } from "../server/db";
+const PgSession = connectPgSimple(session);
 
 class Storage {
+  sessionStore: session.Store;
+
+  constructor() {
+    // Ensure DATABASE_URL is set
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL is missing in .env");
+    }
+
+    // Initialize session store with PostgreSQL
+    this.sessionStore = new PgSession({
+      pool, // Uses existing PostgreSQL connection
+      tableName: "session", // You can change this table name
+    });
+  }
+
   async sendLoginNotification(username: string) {
-    // Implement your email sending logic here
-    // You'll need to add an email service integration
     console.log(`Login notification would be sent to ${username}`);
   }
 }

@@ -1,6 +1,15 @@
 {
-  "include": ["client/src/**/*", "shared/**/*", "server/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
+  "include": [
+    "client/src/**/*",
+    "shared/**/*",
+    "server/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts"
+  ],
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
@@ -8,16 +17,17 @@
     "module": "ESNext",
     "strict": true,
     "lib": ["esnext", "dom", "dom.iterable"],
-    "jsx": "preserve",
+    "jsx": "react-jsx",  // Updated to `react-jsx` for modern JSX syntax in React
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false, // Removed this to make it cleaner (set to false unless absolutely necessary)
+    "moduleResolution": "node",  // Changed to `node` (the default in Vite)
     "baseUrl": ".",
-    "types": ["node", "vite/client"],
+    "types": ["node", "vite/client"],  // Ensure Vite client types are available
     "paths": {
       "@/*": ["./client/src/*"],
       "@shared/*": ["./shared/*"]
     }
   }
 }
+

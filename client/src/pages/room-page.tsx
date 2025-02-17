@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import useVideo from "@/hooks/use-video";
@@ -17,7 +17,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField } from "@/components/ui/form";
 import useSpeechRecognition from "@/hooks/use-speech-recognition"; // Assuming this hook is created
-
 
 const messageSchema = z.object({
   message: z.string().min(1),
@@ -62,7 +61,7 @@ export default function RoomPage() {
     }
   }, [stream]);
 
-  const trialCalls = parseInt(localStorage.getItem('trialCalls') || '0');
+  const trialCalls = parseInt(localStorage.getItem("trialCalls") || "0");
 
   if (!room) return null;
   if (!user && trialCalls >= 3) {
@@ -87,8 +86,8 @@ export default function RoomPage() {
 
   React.useEffect(() => {
     if (!user) {
-      const current = parseInt(localStorage.getItem('trialCalls') || '0');
-      localStorage.setItem('trialCalls', (current + 1).toString());
+      const current = parseInt(localStorage.getItem("trialCalls") || "0");
+      localStorage.setItem("trialCalls", (current + 1).toString());
     }
   }, []);
 
@@ -110,75 +109,14 @@ export default function RoomPage() {
 
         <div className="relative flex-1">
           {Array.from(peers.entries()).map(([peerId, peer]) => (
-            <div key={peerId} className="h-full">
-              <video
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-                srcObject={peer.stream}
-              />
-              <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm flex flex-col gap-1">
-                <div>{users.find((u) => u.id === peerId)?.username}</div>
-                <div className="text-xs">English Score: {englishScore}</div>
-                {isListening && <div className="text-xs text-green-500">Speaking English</div>}
-              </div>
-            </div>
-          ))}
-
-          <div 
-            className="absolute bottom-4 right-4 w-32 h-24 cursor-pointer hover:scale-150 transition-transform"
-            onClick={(e) => {
-              e.currentTarget.classList.toggle('fixed');
-              e.currentTarget.classList.toggle('inset-0');
-              e.currentTarget.classList.toggle('w-32');
-              e.currentTarget.classList.toggle('h-24');
-              e.currentTarget.classList.toggle('z-50');
-            }}
-          >
-            <Card className="w-full h-full relative overflow-hidden">
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-            <div className="absolute bottom-4 left-4 right-4 flex justify-center gap-2">
-              <Button
-                variant={isAudioEnabled ? "default" : "destructive"}
-                size="icon"
-                onClick={toggleAudio}
-              >
-                {isAudioEnabled ? (
-                  <Mic className="h-4 w-4" />
-                ) : (
-                  <MicOff className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                variant={isVideoEnabled ? "default" : "destructive"}
-                size="icon"
-                onClick={toggleVideo}
-              >
-                {isVideoEnabled ? (
-                  <VideoIcon className="h-4 w-4" />
-                ) : (
-                  <VideoOff className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm">
-              You
-            </div>
-          </Card>
-
-          {Array.from(peers.entries()).map(([peerId, peer]) => (
             <Card key={peerId} className="relative overflow-hidden">
               <video
                 autoPlay
                 playsInline
                 className="w-full h-full object-cover"
-                srcObject={peer.stream}
+                ref={(video) => {
+                  if (video) video.srcObject = peer.stream;
+                }}
               />
               <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm flex flex-col gap-1">
                 <div>{users.find((u) => u.id === peerId)?.username}</div>
@@ -203,9 +141,7 @@ export default function RoomPage() {
               {users.map((participant) => (
                 <div key={participant.id} className="flex items-center gap-2 mb-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>
-                      {participant.username[0].toUpperCase()}
-                    </AvatarFallback>
+                    <AvatarFallback>{participant.username[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <span className="text-sm">
                     {participant.username}
@@ -224,15 +160,11 @@ export default function RoomPage() {
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`mb-4 ${
-                  msg.sender.id === user.id ? "text-right" : "text-left"
-                }`}
+                className={`mb-4 ${msg.sender.id === user.id ? "text-right" : "text-left"}`}
               >
                 <div
                   className={`inline-block max-w-[80%] px-4 py-2 rounded-lg ${
-                    msg.sender.id === user.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                    msg.sender.id === user.id ? "bg-primary text-primary-foreground" : "bg-muted"
                   }`}
                 >
                   <div className="text-xs mb-1">
@@ -247,20 +179,13 @@ export default function RoomPage() {
           <Card className="rounded-none border-x-0 border-b-0">
             <CardContent className="p-4">
               <Form {...messageForm}>
-                <form
-                  onSubmit={messageForm.handleSubmit(handleSendMessage)}
-                  className="flex gap-2"
-                >
+                <form onSubmit={messageForm.handleSubmit(handleSendMessage)} className="flex gap-2">
                   <FormField
                     control={messageForm.control}
                     name="message"
                     render={({ field }) => (
                       <FormControl>
-                        <Input
-                          placeholder="Type a message..."
-                          className="flex-1"
-                          {...field}
-                        />
+                        <Input placeholder="Type a message..." className="flex-1" {...field} />
                       </FormControl>
                     )}
                   />

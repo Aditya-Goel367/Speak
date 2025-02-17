@@ -1,4 +1,3 @@
-
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
@@ -46,7 +45,7 @@ class WebSocketManager {
   broadcast(roomId: number, message: WebSocketMessage) {
     const room = this.rooms.get(roomId);
     if (!room) return;
-    
+
     for (const userId of room) {
       const ws = this.connections.get(userId);
       if (ws?.readyState === WebSocket.OPEN) {
@@ -72,10 +71,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 function setupHttpRoutes(app: Express) {
   app.post("/api/rooms", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const parsed = insertRoomSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).send(parsed.error);
-    
+
     const room = await storage.createRoom({
       ...parsed.data,
       ownerId: req.user.id,
@@ -91,13 +90,13 @@ function setupHttpRoutes(app: Express) {
 
   app.get("/api/rooms/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.sendStatus(400);
-    
+
     const room = await storage.getRoom(id);
     if (!room) return res.sendStatus(404);
-    
+
     res.json(room);
   });
 }
@@ -115,29 +114,28 @@ function setupWebSocket(app: Express): Server {
 function handleWebSocketConnection(wsManager: WebSocketManager) {
   return async (ws: WebSocket, req: any) => {
     if (!req.url) return ws.close();
-    
-    const isAnonymous = req.url.includes('anonymous=true');
-    const userId = isAnonymous ? 
-      `anonymous_${Date.now()}` : 
-      parseInt(new URL(req.url, "http://localhost").searchParams.get("userId") || "");
-    
-    const userId = parseInt(new URL(req.url, "http://localhost").searchParams.get("userId") || "");
-    if (isNaN(userId)) return ws.close();
-    
+
+    const isAnonymous = req.url.includes("anonymous=true");
+    let userId: number | string = isAnonymous
+      ? `anonymous_${Date.now()}`
+      : parseInt(new URL(req.url, "http://localhost").searchParams.get("userId") || "");
+
+    if (!isAnonymous && isNaN(userId as number)) return ws.close();
+
     const user = await storage.getUser(userId);
     if (!user) return ws.close();
-    
-    wsManager.addConnection(userId, ws);
-    
-    ws.on("message", data => handleWebSocketMessage(wsManager, userId, data));
-    ws.on("close", () => wsManager.removeConnection(userId));
+
+    wsManager.addConnection(userId as number, ws);
+
+    ws.on("message", (data) => handleWebSocketMessage(wsManager, userId as number, data));
+    ws.on("close", () => wsManager.removeConnection(userId as number));
   };
 }
 
 function handleWebSocketMessage(wsManager: WebSocketManager, userId: number, data: any) {
   try {
     const msg = JSON.parse(data.toString()) as WebSocketMessage;
-    
+
     switch (msg.type) {
       case "join_room":
         handleJoinRoom(wsManager, msg.roomId, userId);
@@ -164,33 +162,31 @@ async function handleJoinRoom(wsManager: WebSocketManager, roomId: number, userI
   if (!room) return;
 
   wsManager.joinRoom(roomId, userId);
-  
+
   const users = await Promise.all(
-    Array.from(wsManager.getRoomUsers(roomId) || []).map(id => storage.getUser(id))
+    Array.from(wsManager.getRoomUsers(roomId) || []).map((id) => storage.getUser(id))
   );
-  
+
   wsManager.broadcast(roomId, {
     type: "room_users",
     roomId,
-    users: users.filter((u): u is User => !!u)
+    users: users.filter((u): u is User => !!u),
   });
 }
-
 
 async function findMatchingUser(userId: number): Promise<User | null> {
   const currentUser = await storage.getUser(userId);
   if (!currentUser) return null;
 
   const users = await storage.getActiveUsers();
-  return users.find(u => 
-    u.id !== userId && 
-    Math.abs((u.points || 0) - (currentUser.points || 0)) < 100
-  ) || null;
+  return (
+    users.find(
+      (u) => u.id !== userId && Math.abs((u.points || 0) - (currentUser.points || 0)) < 100
+    ) || null
+  );
 }
 
-
 async function getBotResponse(message: string): Promise<string> {
-  // Simple bot responses - you can enhance this with more sophisticated AI
   const responses = [
     "That's interesting! Tell me more.",
     "I understand what you mean.",

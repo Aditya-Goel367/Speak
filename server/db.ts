@@ -1,3 +1,5 @@
+import "dotenv/config"; // 
+console.log("✅ DATABASE_URL:", process.env.DATABASE_URL)
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
