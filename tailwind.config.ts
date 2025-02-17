@@ -3,8 +3,8 @@ import tailwindcssAnimate from 'tailwindcss-animate';
 import typography from '@tailwindcss/typography';
 
 const config: Config = {
-  darkMode: ['class'],
-  content: ['./client/index.html', './client/src/**/*.{js,jsx,ts,tsx}'],
+  darkMode: ['class' , 'dark'],
+  content: ['./client/index.html', './client/src/**/*.{js,jsx,ts,tsx}'], // Make sure your content paths are correct
   theme: {
     extend: {
       borderRadius: {

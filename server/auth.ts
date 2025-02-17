@@ -18,12 +18,14 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
+// Hash the user's password with a salt
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
+// Compare provided password with stored hash
 async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
@@ -52,11 +54,13 @@ export function setupAuth(app: Express) {
     },
   };
 
-  app.set("trust proxy", 1);
+  // Setup middleware for sessions and passport
+  app.set("trust proxy", 1); // For secure cookies in reverse proxies
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // LocalStrategy for authentication
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -71,7 +75,10 @@ export function setupAuth(app: Express) {
     })
   );
 
+  // Serialize user information into the session
   passport.serializeUser((user, done) => done(null, user.id));
+  
+  // Deserialize user from session
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
@@ -84,14 +91,17 @@ export function setupAuth(app: Express) {
   // Register API
   app.post("/api/register", async (req, res, next) => {
     try {
-      const existingUser = await storage.getUserByUsername(req.body.username);
+      const { username, password } = req.body;
+      
+      const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
         return res.status(400).json({ error: "Username already exists" });
       }
 
+      const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({
         ...req.body,
-        password: await hashPassword(req.body.password),
+        password: hashedPassword,
       });
 
       req.login(user, (err) => {

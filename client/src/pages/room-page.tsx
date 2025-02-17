@@ -1,203 +1,154 @@
-import React, { useEffect, useRef } from "react";
-import { useLocation, useParams } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import useVideo from "@/hooks/use-video";
-import { useWebSocket } from "@/hooks/use-websocket";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { type Room } from "@shared/schema";
-import { ArrowLeft, Mic, MicOff, Video as VideoIcon, VideoOff, Send, Users } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { insertRoomSchema, type Room } from "@shared/schema";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField } from "@/components/ui/form";
-import useSpeechRecognition from "@/hooks/use-speech-recognition"; // Assuming this hook is created
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
+import { LogOut, Plus, Video, User } from "lucide-react";
+import { motion } from 'framer-motion';
 
-const messageSchema = z.object({
-  message: z.string().min(1),
-});
+const AnimatedCard = motion(Card); // Wrap Card with motion
+const AnimatedButton = motion(Button); // Wrap Button with motion (Not used in this specific modification)
 
-type MessageForm = z.infer<typeof messageSchema>;
-
-export default function RoomPage() {
-  const { id } = useParams();
-  const roomId = parseInt(id);
+export default function RoomPage() {  // Corrected the page name to RoomPage
+  const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const { stream, isVideoEnabled, isAudioEnabled, toggleVideo, toggleAudio } = useVideo();
-  const { peers, messages, users, sendMessage } = useWebSocket(roomId);
-  const { isListening, englishScore, startListening, stopListening } = useSpeechRecognition();
 
-  useEffect(() => {
-    if (isAudioEnabled) {
-      startListening();
-    } else {
-      stopListening();
-    }
-  }, [isAudioEnabled]);
-
-  const { data: room } = useQuery<Room>({
-    queryKey: [`/api/rooms/${roomId}`],
-    enabled: !isNaN(roomId),
+  const { data: rooms = [] } = useQuery<Room[]>({ 
+    queryKey: ["/api/rooms"],
+    enabled: !!user // Only fetch rooms if the user is authenticated
   });
 
-  const messageForm = useForm<MessageForm>({
-    resolver: zodResolver(messageSchema),
+  const createRoomForm = useForm({
+    resolver: zodResolver(insertRoomSchema),
     defaultValues: {
-      message: "",
-    },
+      name: "",
+      isPrivate: false
+    }
   });
 
-  // Set up local video stream
-  useEffect(() => {
-    if (stream && localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
+  const createRoomMutation = useMutation({
+    mutationFn: async (data: { name: string; isPrivate: boolean }) => {
+      const res = await apiRequest("POST", "/api/rooms", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
+      createRoomForm.reset(); // Reset the form after creating a room
     }
-  }, [stream]);
+  });
 
-  const trialCalls = parseInt(localStorage.getItem("trialCalls") || "0");
-
-  if (!room) return null;
-  if (!user && trialCalls >= 3) {
+  // If no user is logged in, show the login/signup prompt
+  if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-[400px]">
-          <CardHeader>
-            <CardTitle>Trial Expired</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              You have used all your trial calls. Please log in to continue using the video chat.
-            </p>
-            <Button onClick={() => setLocation("/auth")} className="w-full">
-              Log In
+      <div className="min-h-screen p-8 flex flex-col items-center justify-center">
+        <div className="text-center mb-8">
+          <Video className="h-16 w-16 text-primary mx-auto mb-4" />
+          <h1 className="text-4xl font-bold mb-2">Welcome to Video Chat Platform</h1>
+          <p className="text-muted-foreground mb-8">Connect with people worldwide through secure video calls</p>
+          <div className="flex gap-4 justify-center">
+            <Button size="lg" onClick={() => setLocation("/auth")}>Sign Up</Button>
+            <Button size="lg" variant="outline" onClick={() => setLocation("/room/1")}>
+              Try it First (3 free calls)
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Try the platform with up to 3 free video calls before signing up
+          </p>
+        </div>
       </div>
     );
   }
 
-  React.useEffect(() => {
-    if (!user) {
-      const current = parseInt(localStorage.getItem("trialCalls") || "0");
-      localStorage.setItem("trialCalls", (current + 1).toString());
-    }
-  }, []);
-
-  const handleSendMessage = (data: MessageForm) => {
-    sendMessage(data.message);
-    messageForm.reset();
-  };
-
   return (
-    <div className="min-h-screen grid grid-cols-[1fr_300px]">
-      <div className="p-8 flex flex-col">
-        <header className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={() => setLocation("/")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Rooms
-          </Button>
-          <h1 className="text-2xl font-bold">{room.name}</h1>
-        </header>
-
-        <div className="relative flex-1">
-          {Array.from(peers.entries()).map(([peerId, peer]) => (
-            <Card key={peerId} className="relative overflow-hidden">
-              <video
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-                ref={(video) => {
-                  if (video) video.srcObject = peer.stream;
-                }}
-              />
-              <div className="absolute top-4 left-4 bg-background/80 px-2 py-1 rounded text-sm flex flex-col gap-1">
-                <div>{users.find((u) => u.id === peerId)?.username}</div>
-                <div className="text-xs">English Score: {englishScore}</div>
-                {isListening && <div className="text-xs text-green-500">Speaking English</div>}
-              </div>
-            </Card>
-          ))}
+    <div className="min-h-screen p-8">
+      <header className="max-w-6xl mx-auto flex justify-between items-center mb-8">
+        <div className="flex items-center gap-4">
+          <Video className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Speaklex</h1>
         </div>
-      </div>
 
-      <div className="border-l flex flex-col">
-        <Card className="rounded-none border-x-0 border-t-0">
+        <div className="flex items-center gap-6">
+          <Card className="flex items-center gap-4 p-4">
+            <User className="h-8 w-8 text-primary" />
+            <div>
+              <p className="font-medium">{user.username}</p>
+              <p className="text-sm text-muted-foreground">Points: {user.points || 0}</p>
+            </div>
+          </Card>
+          <Button variant="outline" onClick={() => logoutMutation.mutate()}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto grid gap-8 md:grid-cols-[1fr_2fr]">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Participants ({users.length})
-            </CardTitle>
+            <CardTitle>Create Room</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[200px]">
-              {users.map((participant) => (
-                <div key={participant.id} className="flex items-center gap-2 mb-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{participant.username[0].toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm">
-                    {participant.username}
-                    {participant.id === user.id && " (you)"}
-                  </span>
-                </div>
-              ))}
-            </ScrollArea>
+            <Form {...createRoomForm}>
+              <form onSubmit={createRoomForm.handleSubmit(data => createRoomMutation.mutate(data))} className="space-y-4">
+                <FormField
+                  control={createRoomForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Room Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={createRoomMutation.isPending}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Room
+                </Button>
+              </form>
+            </Form>
           </CardContent>
         </Card>
 
-        <Separator />
-
-        <div className="flex-1 flex flex-col">
-          <ScrollArea className="flex-1 p-4">
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`mb-4 ${msg.sender.id === user.id ? "text-right" : "text-left"}`}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Available Rooms</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {rooms.map((room, index) => ( // Added index for animation delay
+              <AnimatedCard // Use AnimatedCard
+                key={room.id}
+                className="cursor-pointer scale-up"
+                onClick={() => setLocation(`/room/${room.id}`)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }} // Staggered animation
+                whileHover={{ scale: 1.02 }}
               >
-                <div
-                  className={`inline-block max-w-[80%] px-4 py-2 rounded-lg ${
-                    msg.sender.id === user.id ? "bg-primary text-primary-foreground" : "bg-muted"
-                  }`}
-                >
-                  <div className="text-xs mb-1">
-                    {msg.sender.id === user.id ? "You" : msg.sender.username}
-                  </div>
-                  <div className="break-words">{msg.text}</div>
-                </div>
-              </div>
+                <CardHeader>
+                  <CardTitle className="text-lg">{room.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Created by {room.ownerId === user.id ? "you" : "another user"}
+                  </p>
+                </CardContent>
+              </AnimatedCard>
             ))}
-          </ScrollArea>
+          </div>
 
-          <Card className="rounded-none border-x-0 border-b-0">
-            <CardContent className="p-4">
-              <Form {...messageForm}>
-                <form onSubmit={messageForm.handleSubmit(handleSendMessage)} className="flex gap-2">
-                  <FormField
-                    control={messageForm.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormControl>
-                        <Input placeholder="Type a message..." className="flex-1" {...field} />
-                      </FormControl>
-                    )}
-                  />
-                  <Button type="submit" size="icon">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+          {rooms.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">
+              No rooms available. Create one to get started!
+            </p>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

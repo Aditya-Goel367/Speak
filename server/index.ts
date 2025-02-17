@@ -60,7 +60,7 @@ app.use(loggingMiddleware);
     serveStatic(app);
   }
 
-  const PORT = 2000;
+  const PORT = 2500;
   server.listen(PORT, "0.0.0.0", () => {
     log(`serving on port ${PORT}`);
   });

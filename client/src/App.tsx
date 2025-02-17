@@ -1,4 +1,3 @@
-
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -65,9 +64,16 @@ function Router() {
       <main className="flex-1">
         <Switch>
           <ProtectedRoute path="/" component={HomePage} />
-          <ProtectedRoute path="/room/:id" component={RoomPage} />
-          <Route path="/auth" component={AuthPage} />
-          <Route component={NotFound} />
+          <ProtectedRoute
+            path="/room/:id"
+            component={RoomPage ? RoomPage : () => null} // Conditional rendering for RoomPage
+          />
+          <Route path="/auth">
+            <AuthPage />
+          </Route>
+          <Route>
+            <NotFound />
+          </Route>
         </Switch>
       </main>
       <Footer />

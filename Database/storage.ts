@@ -6,6 +6,11 @@ const PgSession = connectPgSimple(session);
 
 class Storage {
   sessionStore: session.Store;
+  createRoom: any;
+  getRooms: any;
+  getRoom: any;
+  getUser: any;
+  getActiveUsers: any;
 
   constructor() {
     // Ensure DATABASE_URL is set

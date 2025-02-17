@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
@@ -8,6 +8,7 @@ import { insertRoomSchema, type WebSocketMessage, type User } from "@shared/sche
 class WebSocketManager {
   private connections = new Map<number, WebSocket>();
   private rooms = new Map<number, Set<number>>();
+  getRoomUsers: any;
 
   addConnection(userId: number, ws: WebSocket) {
     this.connections.set(userId, ws);
@@ -69,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 function setupHttpRoutes(app: Express) {
-  app.post("/api/rooms", async (req, res) => {
+  app.post("/api/rooms", async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const parsed = insertRoomSchema.safeParse(req.body);
@@ -82,13 +83,13 @@ function setupHttpRoutes(app: Express) {
     res.json(room);
   });
 
-  app.get("/api/rooms", async (req, res) => {
+  app.get("/api/rooms", async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const rooms = await storage.getRooms();
     res.json(rooms);
   });
 
-  app.get("/api/rooms/:id", async (req, res) => {
+  app.get("/api/rooms/:id", async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const id = parseInt(req.params.id);
@@ -150,6 +151,10 @@ function handleWebSocketMessage(wsManager: WebSocketManager, userId: number, dat
         break;
       case "chat_message":
         wsManager.broadcast(msg.roomId, msg);
+        break;
+      case "error":
+        // Handle error message
+        console.error(`Error message: ${msg.message}`);
         break;
     }
   } catch (e) {

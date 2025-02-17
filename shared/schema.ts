@@ -48,5 +48,7 @@ export type WebSocketMessage =
   | { type: "answer"; target: number; answer: RTCSessionDescriptionInit }
   | { type: "ice_candidate"; target: number; candidate: RTCIceCandidate }
   | { type: "chat_message"; roomId: number; message: string }
-  | { type: "room_users"; roomId: number; users: User[] };
+  | { type: "room_users"; roomId: number; users: User[] }
+  | { type: "error"; message: string };  // Added error type for handling error messages
+
 

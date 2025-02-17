@@ -10,12 +10,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { LogOut, Plus, Video, User } from "lucide-react";
-import { motion } from 'framer-motion'; // Import framer-motion
-
+import { motion } from 'framer-motion';
 
 const AnimatedCard = motion(Card); // Wrap Card with motion
 const AnimatedButton = motion(Button); // Wrap Button with motion (Not used in this specific modification)
-
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -23,7 +21,7 @@ export default function HomePage() {
 
   const { data: rooms = [] } = useQuery<Room[]>({ 
     queryKey: ["/api/rooms"],
-    enabled: !!user
+    enabled: !!user // Only fetch rooms if user is authenticated
   });
 
   const createRoomForm = useForm({
@@ -41,10 +39,11 @@ export default function HomePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
-      createRoomForm.reset();
+      createRoomForm.reset(); // Reset the form after creating a room
     }
   });
 
+  // If no user is logged in, show the login/signup prompt
   if (!user) {
     return (
       <div className="min-h-screen p-8 flex flex-col items-center justify-center">
@@ -128,7 +127,7 @@ export default function HomePage() {
                 onClick={() => setLocation(`/room/${room.id}`)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }} //Staggered animation
+                transition={{ duration: 0.3, delay: index * 0.1 }} // Staggered animation
                 whileHover={{ scale: 1.02 }}
               >
                 <CardHeader>

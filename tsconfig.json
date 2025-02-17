@@ -1,4 +1,26 @@
 {
+  "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
+    "noEmit": true,
+    "module": "ESNext",
+    "strict": true,
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "jsx": "react-jsx",  
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": false,
+    "moduleResolution": "node",  
+    "baseUrl": ".",
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["./client/src/*"],
+      "@shared/*": ["./shared/*"]
+    },
+    "forceConsistentCasingInFileNames": true,
+    "target": "es2015",           // Set target to ES2015 or higher
+    "downlevelIteration": true    // Enable downlevel iteration support for Map
+  },
   "include": [
     "client/src/**/*",
     "shared/**/*",
@@ -9,25 +31,5 @@
     "build",
     "dist",
     "**/*.test.ts"
-  ],
-  "compilerOptions": {
-    "incremental": true,
-    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
-    "noEmit": true,
-    "module": "ESNext",
-    "strict": true,
-    "lib": ["esnext", "dom", "dom.iterable"],
-    "jsx": "react-jsx",  // Updated to `react-jsx` for modern JSX syntax in React
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "allowImportingTsExtensions": false, // Removed this to make it cleaner (set to false unless absolutely necessary)
-    "moduleResolution": "node",  // Changed to `node` (the default in Vite)
-    "baseUrl": ".",
-    "types": ["node", "vite/client"],  // Ensure Vite client types are available
-    "paths": {
-      "@/*": ["./client/src/*"],
-      "@shared/*": ["./shared/*"]
-    }
-  }
+  ]
 }
-
