@@ -2,45 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-}
-
-[data-theme="dark"] {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-}
-
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
-/* Animation utilities */
-.scale-up {
-  transition: transform 0.2s ease-in-out;
-}
-
-.scale-up:hover {
-  transform: scale(1.02);
-}
-
-.animate-in {
-  animation: fadeIn 0.5s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @layer base {
   :root {
     --background: 222.2 84% 4.9%;
@@ -62,32 +23,43 @@ body {
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    --radius: 0.5rem;
+  }
+
+  [data-theme="dark"] {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
   }
 
   * {
-    @apply border-border transition-colors duration-200;
+    @apply border-border;
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
   }
+}
 
-  .fade-enter {
+/* Custom animations */
+.animate-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
     opacity: 0;
     transform: translateY(10px);
   }
-
-  .fade-enter-active {
+  to {
     opacity: 1;
     transform: translateY(0);
-    transition: opacity 300ms, transform 300ms;
   }
+}
 
-  .scale-up {
-    @apply hover:scale-105 transition-transform duration-200;
-  }
+.scale-up {
+  @apply transition-transform duration-200 hover:scale-105;
+}
 
-  .pulse {
-    @apply hover:animate-pulse;
-  }
+.pulse {
+  @apply hover:animate-pulse;
 }

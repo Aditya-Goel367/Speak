@@ -1,0 +1,23 @@
+{
+  "css.validate": false,
+  "tailwindCSS.includeLanguages": {
+    "plaintext": "css",
+    "css": "postcss"
+  },
+  "files.associations": {
+    "*.css": "postcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "editor.tokenColorCustomizations": {
+    "textMateRules": [
+      {
+        "scope": "entity.other.attribute-name.class.css",
+        "settings": {
+          "foreground": "#79C0FF"
+        }
+      }
+    ]
+  }
+}
